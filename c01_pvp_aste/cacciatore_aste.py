@@ -38,7 +38,7 @@ MATRICE_DISTANZE = {
 KEYWORDS_POSITIVE = [
     "indipendente", "giardino", "corte esclusiva", 
     "area scoperta", "scoperto esclusivo", "cielo terra", 
-    "bifamiliare", "unifamiliare", "villa", "villino"
+    "bifamiliare", "unifamiliare", "villa", "villino", "loghino"
 ]
 
 # 3. PARAMETRI DI AUDIT
