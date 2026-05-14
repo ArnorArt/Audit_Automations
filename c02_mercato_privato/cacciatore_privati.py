@@ -20,7 +20,7 @@ MATRICE_DISTANZE = {
 # 3. IL SETACCIO LINGUISTICO (Filtri Testuali)
 KEYWORDS_POSITIVE = [
     "indipendente", "giardino", "corte esclusiva", "area scoperta", 
-    "scoperto esclusivo", "cielo terra", "bifamiliare", "unifamiliare", 
+    "scoperto esclusivo", "cielo terra", "bifamiliare", "plirifamiliare", "unifamiliare", 
     "villa", "villino", "loghino", "saldo e stralcio", "affitto a riscatto", 
     "rent to buy", "rent-to-buy"
 ]
