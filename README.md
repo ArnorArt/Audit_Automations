@@ -20,5 +20,12 @@ Al momento, l'ecosistema è composto dai seguenti moduli indipendenti:
 * *(In Sviluppo)* **`c02_mercato_privato`**: Modulo per lo scouting su portali privati (es. Immobiliare, Idealista) con focus su metriche di mercato e Rent-to-Buy.
 * *(Locale)* **`c03_blacklist`**: Database di esclusione e calcolo metriche mantenuto in locale per ragioni di privacy e strategia.
 
+## Modulo 2: Mercato Privato (Ecosistema Modulare)
+Un motore di ricerca avanzato che incrocia portali nazionali e agenzie locali, progettato con Architettura a Oggetti (OOP) e Feedback Loop umano.
+
+* **Il Manuale (Dati):** File isolato con parametri finanziari, matrice distanze e keyword di setaccio.
+* **Lo Stampo (Auditor):** Classe Python autonoma che giudica i dati grezzi in base al Manuale e gestisce un database locale tramite `pandas`.
+* **Gli Specialisti (Scrapers):** Bot Playwright (`headless=False`) con navigazione organica per aggirare i sistemi anti-bot (DataDome, Cloudflare). Dotati di "Bisturi Regex" per estrarre MQ e Prezzi anche se nascosti in tag SVG o `aria-label`. Include sistema anti-loop basato sulle impronte testuali per bypassare le inserzioni "Vetrina".
+* **Memoria Storica (Feedback Loop):** Registro CSV locale. Il bot ricorda gli annunci `SCARTATI` dall'Auditor Umano, ma li "resuscita" automaticamente se rileva un calo di prezzo incrociando i dati storici, calcolando anche i reali giorni di permanenza sul mercato.
 ---
 *Progetto in continua evoluzione - Architettura scalabile.*
