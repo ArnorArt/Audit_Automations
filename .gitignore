@@ -2,3 +2,4 @@
 .vscode/
 __pycache__/
 .continue/
+c03_blacklist/memoria_storica.csv

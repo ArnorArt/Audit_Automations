@@ -5,6 +5,7 @@ from datetime import datetime
 from cacciatore_privati import BUDGET_MAX, MQ_MIN, KEYWORDS_POSITIVE, KEYWORDS_NEGATIVE
 
 class AuditorImmobiliare:
+    # --- MODULO 1: INIZIALIZZAZIONE E MEMORIA ---
     def __init__(self):
         self.immobili_analizzati = 0
         self.immobili_scartati = 0
@@ -18,7 +19,7 @@ class AuditorImmobiliare:
         self._carica_database()
 
     def _carica_database(self):
-        """Carica il registro storico per controllare ID, prezzi e date."""
+        """Carica il registro storico per controllare ID, prezzi e date. Carica il CSV fisico e lo trasforma in un DataFrame."""
         if os.path.exists(self.percorso_db) and os.path.getsize(self.percorso_db) > 0:
             self.df_memoria = pd.read_csv(self.percorso_db)
         else:
@@ -31,13 +32,14 @@ class AuditorImmobiliare:
         self.df_memoria.to_csv(self.percorso_db, index=False)
         print("  [v] Memoria Storica aggiornata e salvata in c03_blacklist.")
 
+    # --- MODULO 2: IL MOTORE DI VALUTAZIONE ---
     def valuta_annuncio(self, id_annuncio, link, titolo, descrizione, prezzo, metri_quadri):
         """Passa l'annuncio ai Raggi X. Applica i filtri e controlla la Memoria Storica."""
         testo_completo = (titolo + " " + descrizione).lower()
         oggi = datetime.now()
 
         # ---------------------------------------------------------
-        # 1. CONTROLLO NELLA MEMORIA STORICA (Identità Intelligente)
+        # 2A. CONTROLLO NELLA MEMORIA STORICA (Identità Intelligente)
         # ---------------------------------------------------------
         if id_annuncio in self.df_memoria["ID_Univoco"].values:
             riga = self.df_memoria[self.df_memoria["ID_Univoco"] == id_annuncio].iloc[0]
@@ -64,7 +66,7 @@ class AuditorImmobiliare:
                 return True, f"🚨 RIBASSO RILEVATO! Sconto: €{sconto}. (Sul mercato da {giorni_trascorsi} gg)"
 
         # ---------------------------------------------------------
-        # 2. FILTRI RIGIDI (Se è una casa nuova)
+        # 3. FILTRI RIGIDI (Se è una casa nuova)
         # ---------------------------------------------------------
         if prezzo > BUDGET_MAX:
             self.immobili_scartati += 1
@@ -85,7 +87,7 @@ class AuditorImmobiliare:
             return False, "Scartato: Non indipendente."
 
         # ---------------------------------------------------------
-        # 3. REGISTRAZIONE NUOVO BERSAGLIO
+        # 4. REGISTRAZIONE NUOVO BERSAGLIO
         # ---------------------------------------------------------
         if id_annuncio not in self.df_memoria["ID_Univoco"].values:
             nuova_riga = pd.DataFrame([{

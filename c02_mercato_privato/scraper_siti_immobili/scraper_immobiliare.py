@@ -11,7 +11,7 @@ sys.path.append(cartella_superiore)
 
 from auditor_valutatore import AuditorImmobiliare
 
-# L'URL È STATO INSERITO DIRETTAMENTE (Non devi più incollarlo)
+# L'URL GIGANTE
 URL_IMMOBILIARE = (
     "https://www.immobiliare.it/search-list/?idContratto=1&idCategoria=1&prezzoMassimo=130000"
     "&superficieMinima=90&__lang=it&vrt=45.199129%2C10.911345%3B45.18544%2C10.897053%3B45.169386"
@@ -38,7 +38,7 @@ URL_IMMOBILIARE = (
 )
 
 def esegui_scouting_organico():
-    print("--- AVVIO SPECIALISTA: IMMOBILIARE.IT (V5 - ANTI LOOP PVP) ---")
+    print("--- AVVIO SPECIALISTA: IMMOBILIARE.IT E MEMORIA STORICA (V7 - BYPASS VETRINA) ---")
     auditor = AuditorImmobiliare()
     
     try:
@@ -51,7 +51,6 @@ def esegui_scouting_organico():
             page.goto(URL_IMMOBILIARE)
             page.wait_for_timeout(3000)
 
-            # --- DIFESA: CHIUSURA BANNER COOKIE ---
             try:
                 bottone_cookie = page.locator("button:has-text('Accetta'), button:has-text('Accetto')").first
                 if bottone_cookie.is_visible(timeout=2000):
@@ -68,14 +67,15 @@ def esegui_scouting_organico():
                 titoli_web = page.locator("a[class*='Title_title']")
                 numero_annunci = titoli_web.count()
                 
-                # LA TUA LOGICA IMPRONTA DA PVP (ANTI-LOOP INFALLIBILE)
-                impronta_corrente = titoli_web.first.inner_text() if numero_annunci > 0 else ""
+                # BISTURI ANTI-LOOP POTENZIATO: Legge il 5° annuncio per saltare gli sponsorizzati
+                indice_impronta = 4 if numero_annunci > 4 else 0
+                impronta_corrente = titoli_web.nth(indice_impronta).inner_text() if numero_annunci > 0 else ""
                 
                 if numero_annunci == 0:
                     print("[-] Nessun annuncio trovato. L'archivio è vuoto o terminato.")
                     break
                     
-                print(f"[*] Trovati {numero_annunci} annunci. Inizio Audit...")
+                print(f"[*] Trovati {numero_annunci} annunci. Inizio Audit e registrazione CSV...")
                 
                 for i in range(numero_annunci):
                     try:
@@ -83,6 +83,9 @@ def esegui_scouting_organico():
                         titolo_testo = nodo_titolo.inner_text()
                         link_relativo = nodo_titolo.get_attribute("href")
                         link_completo = link_relativo if link_relativo.startswith("http") else f"https://www.immobiliare.it{link_relativo}"
+
+                        match_id = re.search(r'/annunci/(\d+)/', link_completo)
+                        id_annuncio = match_id.group(1) if match_id else f"ERR-{int(time.time()*1000)}"
 
                         card = nodo_titolo.locator("xpath=ancestor::li | ancestor::div[contains(@class, 'nd-mediaObject')]").first
                         testo_card_intero = card.inner_text().lower()
@@ -101,18 +104,16 @@ def esegui_scouting_organico():
                         if match_mq:
                             mq_puliti = int(match_mq.group(1))
 
-                        approvato, motivo = auditor.valuta_annuncio(titolo_testo, testo_card_intero, prezzo_pulito, mq_puliti)
+                        approvato, motivo = auditor.valuta_annuncio(id_annuncio, link_completo, titolo_testo, testo_card_intero, prezzo_pulito, mq_puliti)
                         
                         if approvato:
-                            print(f"✅ BERSAGLIO ACQUISITO: {titolo_testo}")
-                            print(f"   Prezzo: € {prezzo_pulito} | Dimensioni: {mq_puliti} m²")
-                            print(f"   Link: {link_completo}")
+                            print(f"✅ {motivo} | {titolo_testo}")
+                            print(f"   ID: {id_annuncio} | Prezzo: € {prezzo_pulito} | {mq_puliti} m²")
                             print(f"   {'-'*40}")
                             
-                    except Exception:
+                    except Exception as e:
                         continue
                 
-                # --- IL SALTO PAGINA E IL CONTROLLO LOOP ---
                 pagina_successiva = pagina_corrente + 1
                 selettore_link_successivo = f"a[href*='pag={pagina_successiva}']"
                 link_successivo_locator = page.locator(selettore_link_successivo).first
@@ -123,10 +124,11 @@ def esegui_scouting_organico():
                         url_prossima_pagina = "https://www.immobiliare.it" + url_prossima_pagina
                         
                     page.goto(url_prossima_pagina)
-                    page.wait_for_timeout(3500) # Attende il caricamento della nuova pagina
+                    page.wait_for_timeout(3500) 
                     
-                    # Rilevamento loop PVP-style: confrontiamo l'impronta dopo il cambio pagina
-                    nuova_impronta = page.locator("a[class*='Title_title']").first.inner_text() if page.locator("a[class*='Title_title']").count() > 0 else ""
+                    # Rilevamento loop aggiornato per la nuova pagina
+                    nuova_impronta = page.locator("a[class*='Title_title']").nth(indice_impronta).inner_text() if page.locator("a[class*='Title_title']").count() > indice_impronta else ""
+                    
                     if impronta_corrente == nuova_impronta:
                         print("  [X] Rilevato blocco pagina del server (Loop sull'impronta). Fine ricerca.")
                         break
@@ -139,9 +141,10 @@ def esegui_scouting_organico():
             print("\n" + "="*50)
             print("REPORT FINALE AUDIT (IMMOBILIARE.IT)")
             print("="*50)
-            print(f"Totale annunci processati: {auditor.immobili_analizzati + auditor.immobili_scartati}")
-            print(f"Totale approvati (in target): {auditor.immobili_analizzati}")
-
+            print(f"Totale annunci analizzati (anche i vecchi nel DB): {auditor.immobili_analizzati + auditor.immobili_scartati}")
+            print(f"Totale approvati (o ribassati): {auditor.immobili_analizzati}")
+            
+            auditor.salva_database()
             browser.close()
             
     except Exception as e:
