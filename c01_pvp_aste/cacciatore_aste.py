@@ -2,43 +2,20 @@ import pandas as pd
 
 # 1. LA MATRICE GEOGRAFICA AGGIORNATA (KM da Nogara 37054)
 MATRICE_DISTANZE = {
-    "Nogara": 0,
-    "Gazzo Veronese": 5,
-    "Sanguinetto": 7,
-    "Villimpenta": 8,
-    "Salizzole": 9,
-    "Sorgà": 10,
-    "Concamarise": 11,
-    "Isola della Scala": 12,
-    "Bovolone": 12,
-    "Castel d'Ario": 13,
-    "Casaleone": 13,
-    "Erbè": 14,
-    "Cerea": 15,
-    "Serravalle a Po": 16,
-    "Trevenzuolo": 16,
-    "Ostiglia": 17,
-    "Sustinente": 17,
-    "Roncoferraro": 18,
-    "Oppeano": 19,
-    "Palù": 19,
-    "San Pietro di Morubio": 20,
-    "Melara": 21,
-    "Vigasio": 22,
-    "Isola Rizza": 22,
-    "Buttapietra": 22,
-    "Borgo Mantovano": 23,
-    "Legnago": 24,
-    "Roverchiara": 24,
-    "Nogarole Rocca": 24
+    "Nogara": 0, "Gazzo Veronese": 5, "Sanguinetto": 7, "Villimpenta": 8,
+    "Salizzole": 9, "Sorgà": 10, "Concamarise": 11, "Isola della Scala": 12,
+    "Bovolone": 12, "Castel d'Ario": 13, "Casaleone": 13, "Erbè": 14,
+    "Cerea": 15, "Serravalle a Po": 16, "Trevenzuolo": 16, "Ostiglia": 17,
+    "Sustinente": 17, "Roncoferraro": 18, "San Pietro di Morubio": 20, 
+    "Melara": 21, "Buttapietra": 22, "Borgo Mantovano": 23, "Legnago": 24
 }
 
 # 2. IL SETACCIO LINGUISTICO
 # Parole che devono essere presenti nella descrizione per identificare una casa indipendente
 KEYWORDS_POSITIVE = [
-    "indipendente", "giardino", "corte esclusiva", 
-    "area scoperta", "scoperto esclusivo", "cielo terra", 
-    "bifamiliare", "unifamiliare", "villa", "villino", "loghino"
+    "indipendente", "giardino", "corte esclusiva", "area scoperta", 
+    "scoperto esclusivo", "cielo terra", "bifamiliare", "plurifamiliare", "unifamiliare", 
+    "villa", "villino", "loghino", "saldo e stralcio",
 ]
 
 # 3. PARAMETRI DI AUDIT
