@@ -11,7 +11,7 @@ sys.path.append(cartella_superiore)
 
 from auditor_valutatore import AuditorImmobiliare
 
-# L'URL GIGANTE
+# L'URL GIGANTE (Mantenuto inalterato)
 URL_IMMOBILIARE = (
     "https://www.immobiliare.it/search-list/?idContratto=1&idCategoria=1&prezzoMassimo=130000"
     "&superficieMinima=90&__lang=it&vrt=45.199129%2C10.911345%3B45.18544%2C10.897053%3B45.169386"
@@ -67,7 +67,6 @@ def esegui_scouting_organico():
                 titoli_web = page.locator("a[class*='Title_title']")
                 numero_annunci = titoli_web.count()
                 
-                # BISTURI ANTI-LOOP POTENZIATO: Legge il 5° annuncio per saltare gli sponsorizzati
                 indice_impronta = 4 if numero_annunci > 4 else 0
                 impronta_corrente = titoli_web.nth(indice_impronta).inner_text() if numero_annunci > 0 else ""
                 
@@ -75,7 +74,7 @@ def esegui_scouting_organico():
                     print("[-] Nessun annuncio trovato. L'archivio è vuoto o terminato.")
                     break
                     
-                print(f"[*] Trovati {numero_annunci} annunci. Inizio Audit e registrazione CSV...")
+                print(f"[*] Trovati {numero_annunci} annunci. Inizio Audit...")
                 
                 for i in range(numero_annunci):
                     try:
@@ -111,7 +110,7 @@ def esegui_scouting_organico():
                             print(f"   ID: {id_annuncio} | Prezzo: € {prezzo_pulito} | {mq_puliti} m²")
                             print(f"   {'-'*40}")
                             
-                    except Exception as e:
+                    except Exception:
                         continue
                 
                 pagina_successiva = pagina_corrente + 1
@@ -126,7 +125,6 @@ def esegui_scouting_organico():
                     page.goto(url_prossima_pagina)
                     page.wait_for_timeout(3500) 
                     
-                    # Rilevamento loop aggiornato per la nuova pagina
                     nuova_impronta = page.locator("a[class*='Title_title']").nth(indice_impronta).inner_text() if page.locator("a[class*='Title_title']").count() > indice_impronta else ""
                     
                     if impronta_corrente == nuova_impronta:

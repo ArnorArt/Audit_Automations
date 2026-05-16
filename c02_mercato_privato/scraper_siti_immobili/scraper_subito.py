@@ -1,133 +1,120 @@
-import sys
-import os
 import time
 import re
+import os
+import pandas as pd
 from playwright.sync_api import sync_playwright
 
-# --- IL PONTE PER PYTHON ---
-cartella_corrente = os.path.dirname(os.path.abspath(__file__))
-cartella_superiore = os.path.dirname(cartella_corrente)
-sys.path.append(cartella_superiore)
+# --- CONFIGURAZIONE CHIRURGICA ---
+BUDGET_MAX = 130000
+DB_PATH = "../database_unico.xlsx"
+KEYWORDS_NEGATIVE = ["bar", "negozio", "ufficio", "quota indivisa", "nuda proprieta"]
 
-from auditor_valutatore import AuditorImmobiliare
-
-# LA FLOTTA DELLE PROVINCE (Legge 80/20: niente click, andiamo diretti al bersaglio)
-URL_SUBITO_LISTA = [
-    "https://www.subito.it/annunci-veneto/vendita/immobili/verona/?pe=130000&szs=100",
-    "https://www.subito.it/annunci-lombardia/vendita/immobili/mantova/?pe=130000&szs=100",
-    "https://www.subito.it/annunci-veneto/vendita/immobili/rovigo/?pe=130000&szs=100"
+URLS_TARGET = [
+    "https://www.subito.it/annunci-veneto/vendita/appartamenti/verona/?price_end=130000",
+    "https://www.subito.it/annunci-lombardia/vendita/immobili/mantova/?price_end=130000",
+    "https://www.subito.it/annunci-veneto/vendita/immobili/rovigo/?price_end=130000"
 ]
 
-def esegui_scouting_subito():
-    print("--- AVVIO SPECIALISTA: SUBITO.IT (V2 - MULTI-PROVINCIA & DNA) ---")
-    auditor = AuditorImmobiliare()
-    
-    try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=False, args=["--disable-blink-features=AutomationControlled"])
-            context = browser.new_context(viewport={"width": 1920, "height": 1080})
-            page = context.new_page()
+MATRICE_DISTANZE = {
+    "nogara": 0, "gazzo veronese": 5, "sanguinetto": 7, "villimpenta": 8,
+    "salizzole": 9, "sorga": 10, "concamarise": 11, "isola della scala": 12,
+    "bovolone": 12, "castel d'ario": 13, "casaleone": 13, "erbe": 14,
+    "cerea": 15, "serravalle a po": 16, "trevenzuolo": 16, "ostiglia": 17,
+    "sustinente": 17, "roncoferraro": 18, "oppeano": 19
+}
 
-            # Il bot esegue la ricerca per ogni provincia nell'elenco
-            for url_target in URL_SUBITO_LISTA:
-                provincia_nome = url_target.split('/')[-2].upper()
-                print(f"\n[*] Cambio rotta. Atterraggio sulla provincia: {provincia_nome}")
-                page.goto(url_target)
-                page.wait_for_timeout(3500)
+def pulisci_prezzo(testo):
+    match = re.search(r'[\d\.]+', testo)
+    return float(match.group(0).replace(".", "")) if match else 0.0
 
-                # Chiusura Cookie aggressiva
-                try:
-                    bottone_cookie = page.locator("button:has-text('Accetta'), button:has-text('Accetto')").first
-                    if bottone_cookie.is_visible(timeout=2000):
-                        bottone_cookie.click()
-                except:
-                    pass
+def pulisci_mq(testo):
+    match = re.search(r'(\d+)\s*mq', testo, re.IGNORECASE)
+    return int(match.group(1)) if match else 0
 
-                pagina_corrente = 1
+def salva_su_database_unico(nuovi_annunci):
+    df_nuovi = pd.DataFrame(nuovi_annunci)
+    if os.path.exists(DB_PATH):
+        df_esistente = pd.read_excel(DB_PATH)
+        df_combinato = pd.concat([df_esistente, df_nuovi], ignore_index=True)
+        df_final = df_combinato.drop_duplicates(subset=["DNA"], keep="first")
+    else:
+        df_final = df_nuovi
+    df_final.to_excel(DB_PATH, index=False)
+    print(f"\n[v] Database Unificato aggiornato. Record totali: {len(df_final)}")
 
-                while True:
-                    print(f"  [>] Analisi Pagina {pagina_corrente} in corso...")
-                    page.wait_for_timeout(2500) 
+def analizza_subito():
+    with sync_playwright() as p:
+        print("--- AVVIO AUTOMAZIONE: SUBITO.IT (MULTI-PROVINCIA) ---")
+        browser = p.chromium.launch(headless=False, args=["--disable-blink-features=AutomationControlled"])
+        context = browser.new_context(viewport={"width": 1920, "height": 1080})
+        page = context.new_page()
+        
+        annunci_salvati = []
 
-                    # TRACCIAMENTO TERMICO: Puntiamo al recinto dei dettagli
-                    sezioni_web = page.locator("section[class*='index-module_details']")
-                    numero_annunci = sezioni_web.count()
-                    
-                    if numero_annunci == 0:
-                        print("  [-] Nessun annuncio organico trovato in questa pagina.")
-                        break
-                        
-                    print(f"  [*] Trovati {numero_annunci} annunci. Estrazione e calcolo DNA...")
-                    
-                    for i in range(numero_annunci):
-                        try:
-                            # 1. Cattura della Sezione
-                            sezione = sezioni_web.nth(i)
-                            
-                            # 2. Passo indietro per trovare il Link
-                            padre = sezione.locator("xpath=..")
-                            nodo_link = padre.locator("a[href*='.htm']").first
-                            
-                            if not nodo_link.is_visible():
-                                continue
-                                
-                            link_completo = nodo_link.get_attribute("href")
-                            if not link_completo.startswith("http"):
-                                link_completo = "https://www.subito.it" + link_completo
-
-                            # 3. Estrazione Titolo (dal link o dal tag h3 interno)
-                            titolo_testo = nodo_link.get_attribute("aria-label")
-                            if not titolo_testo:
-                                titolo_testo = sezione.locator("h3").first.inner_text()
-
-                            # 4. Estrazione Dati per il DNA
-                            testo_card_intero = sezione.inner_text().lower()
-                            
-                            prezzo_pulito = 0.0
-                            match_prezzo = re.search(r'([\d\.]+)\s*€', testo_card_intero)
-                            if match_prezzo:
-                                prezzo_pulito = float(match_prezzo.group(1).replace('.', ''))
-                                
-                            mq_puliti = 0
-                            match_mq = re.search(r'(\d+)\s*mq', testo_card_intero)
-                            if match_mq:
-                                mq_puliti = int(match_mq.group(1))
-
-                            # LA CHIAVE: Creazione del DNA Univoco (Es. 120000_170)
-                            id_annuncio = f"{int(prezzo_pulito)}_{mq_puliti}"
-
-                            # INVIO AL CERVELLO
-                            approvato, motivo = auditor.valuta_annuncio(id_annuncio, link_completo, titolo_testo, testo_card_intero, prezzo_pulito, mq_puliti)
-                            
-                            if approvato:
-                                print(f"  ✅ {motivo} | {titolo_testo}")
-                                print(f"     DNA: {id_annuncio} | Prezzo: € {prezzo_pulito} | {mq_puliti} m²")
-                                print(f"     {'-'*40}")
-                                
-                        except Exception as e:
-                            continue
-                    
-                    # SALTO PAGINA SUBITO.IT
-                    bottone_avanti = page.locator("button:has-text('Successiva'), a:has-text('Successiva'), a[aria-label*='successiva'], button[aria-label*='successiva']").first
-                    
-                    if bottone_avanti.is_visible():
-                        bottone_avanti.click()
-                        page.wait_for_timeout(3500) 
-                        pagina_corrente += 1
-                    else:
-                        print(f"  [-] Fine delle pagine per la provincia di {provincia_nome}.")
-                        break
-
-            # CHIUSURA DEI LAVORI
-            print("\n" + "="*50)
-            print("REPORT FINALE AUDIT (SUBITO.IT - 3 PROVINCE)")
-            print("="*50)
-            print(f"Totale annunci processati e inviati a memoria: {auditor.immobili_analizzati + auditor.immobili_scartati}")
-            auditor.salva_database()
-            browser.close()
+        for url_target in URLS_TARGET:
+            print(f"\n[*] Navigazione su: {url_target}")
+            page.goto(url_target)
+            page.wait_for_load_state("networkidle")
+            time.sleep(2)
             
-    except Exception as e:
-        print(f"\n[!] ERRORE DI ESECUZIONE: {str(e)}")
+            try:
+                page.locator("button:has-text('Accetta')").first.click(timeout=3000)
+            except:
+                pass
+
+            cards = page.locator("div[class*='Container-module_card']")
+            count = cards.count()
+            print(f"[*] Rilevati {count} potenziali annunci in questa provincia.")
+
+            for i in range(count):
+                try:
+                    card = cards.nth(i)
+                    testo_completo = card.inner_text().lower()
+                    
+                    if any(x in testo_completo for x in KEYWORDS_NEGATIVE):
+                        continue
+                    
+                    titolo = card.locator("h2[class*='ItemTitle']").inner_text()
+                    info_prezzo = card.locator("p[class*='price']").inner_text()
+                    
+                    prezzo = pulisci_prezzo(info_prezzo)
+                    mq = pulisci_mq(testo_completo)
+                    
+                    if prezzo == 0 or prezzo > BUDGET_MAX:
+                        continue
+                    
+                    comune_trovato = "Sconosciuto"
+                    distanza = 999
+                    for comune, km in MATRICE_DISTANZE.items():
+                        if comune in testo_completo:
+                            comune_trovato = comune
+                            distanza = km
+                            break
+                    
+                    if distanza > 25:
+                        continue
+                    
+                    dna = f"{int(prezzo)}_{mq}"
+                    link = card.locator("a").first.get_attribute("href")
+                    
+                    annunci_salvati.append({
+                        "Sorgente": "SUBITO_PRIVATO",
+                        "DNA": dna,
+                        "Comune": comune_trovato.capitalize(),
+                        "Distanza_Km": distanza,
+                        "Prezzo": prezzo,
+                        "Superficie_Mq": mq,
+                        "Link": link,
+                        "Note": titolo
+                    })
+                    print(f" -> Bersaglio ID [DNA: {dna}] Acquisito a {comune_trovato.capitalize()}")
+                    
+                except Exception:
+                    continue
+        
+        browser.close()
+        if annunci_salvati:
+            salva_su_database_unico(annunci_salvati)
 
 if __name__ == "__main__":
-    esegui_scouting_subito()
+    analizza_subito()
