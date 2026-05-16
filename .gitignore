@@ -2,4 +2,5 @@
 .vscode/
 __pycache__/
 .continue/
-database_unico.xlsx
+database_unico_scraper.xlsx
+elenco_agenzie.csv
