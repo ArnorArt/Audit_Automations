@@ -16,7 +16,7 @@ KEYWORDS_POSITIVE = [
     "indipendente", "giardino", "corte esclusiva", "area scoperta", 
     "scoperto esclusivo", "cielo terra", "bifamiliare", "plurifamiliare", 
     "unifamiliare", "villa", "villino", "loghino", "saldo e stralcio",
-    "saldo stralcio", "affitto a riscatto", "rent to buy"
+    "saldo stralcio", "affitto a riscatto", "rent to buy", "riscatto"
 ]
 
 KEYWORDS_NEGATIVE = [
