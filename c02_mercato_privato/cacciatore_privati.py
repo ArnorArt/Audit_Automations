@@ -17,14 +17,21 @@ KEYWORDS_POSITIVE = [
     "scoperto esclusivo", "cielo terra", "bifamiliare", "plurifamiliare", 
     "unifamiliare", "villa", "villino", "loghino", "saldo e stralcio",
     "saldo stralcio", "affitto a riscatto", "rent to buy", "riscatto"
+    "singola", "schiera", "rustico"
 ]
 
 KEYWORDS_NEGATIVE = [
     "rudere", "da demolire", "inagibile", "privo di impianti", 
     "completamente da ristrutturare", "nuda proprietà", "bar ", "ristorante",
     "uffici", "negozio", "attività commerciale", "capannone"
+    "bar", "ufficio", "quota indivisa", "nuda proprieta",
+    "commerciale", "laboratorio", "terreno", "garage", "box"
 ]
 
-# 3. PARAMETRI DI AUDIT FISSI
+# 3. Per il Ragno (Spider)
+KEYWORD_LINK_UTILI = ['immobile', 'vendita', 'dettaglio', 'annuncio', 'appartamento', 'casa', 'residenziale', 'scheda', 'rif', 'affitto a riscatto', 'rent-to-buy', 'rent to buy']
+KEYWORD_LINK_SPAZZATURA = ['contatti', 'chi-siamo', 'privacy', 'cookie', 'servizi', 'facebook', 'instagram', 'mailto:', 'tel:', 'agenzia', 'valuta', 'riservata']
+
+# 4. PARAMETRI DI AUDIT FISSI
 BUDGET_MAX = 130000
 MQ_MIN = 100

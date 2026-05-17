@@ -11,7 +11,7 @@ class AuditorImmobiliare:
         
         cartella_corrente = os.path.dirname(os.path.abspath(__file__))
         cartella_madre = os.path.dirname(cartella_corrente)
-        self.percorso_db = os.path.join(cartella_madre, "database_unico.xlsx")
+        self.percorso_db = os.path.join(cartella_madre, "database_unico_scraper.xlsx")
         
         self._carica_database()
 
