@@ -22,10 +22,11 @@ KEYWORDS_POSITIVE = [
 
 KEYWORDS_NEGATIVE = [
     "rudere", "da demolire", "inagibile", "privo di impianti", 
-    "completamente da ristrutturare", "nuda proprietà", "bar ", "ristorante",
+    "completamente da ristrutturare", "nuda proprietà", "ristorante",
     "uffici", "negozio", "attività commerciale", "capannone"
-    "bar", "ufficio", "quota indivisa", "nuda proprieta",
-    "commerciale", "laboratorio", "terreno", "garage", "box"
+    "quota indivisa", "nuda proprieta",
+    "commerciale", "lotto residenziale edificabile", "terreno residenziale", 
+    "terreno edificabile"
 ]
 
 # 3. Per il Ragno (Spider)
